@@ -488,9 +488,9 @@ public class MailClient {
     public void getMails(final ReadableMap obj, final Promise promise) {
         final String folder = obj.getString("folder");
         int requestKind = obj.getInt("requestKind");
-        int limit = 100;
+        Long limit = Long.valueOf(100);
         if(obj.hasKey("limit")) {
-            limit = obj.getInt("limit");
+            limit = Long.valueOf(obj.getInt("limit"));
         }
         IndexSet indexSet = IndexSet.indexSetWithRange(new Range(1, limit));
         final IMAPFetchMessagesOperation messagesOperation = imapSession.fetchMessagesByUIDOperation(folder, requestKind, indexSet);
