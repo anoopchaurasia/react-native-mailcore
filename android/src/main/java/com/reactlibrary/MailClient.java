@@ -8,6 +8,7 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableArray;
+import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
@@ -38,6 +39,7 @@ import com.libmailcore.IMAPFetchMessagesOperation;
 import com.libmailcore.IMAPFetchParsedContentOperation;
 import com.libmailcore.MessageParser;
 import com.libmailcore.IMAPMessage;
+import com.libmailcore.IMAPIdleOperation;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -580,21 +582,20 @@ public class MailClient {
         });
     }
 
-    public void listenChanges(final ReadableMap obj,final Promise promise) {
-        IMAPIdleOperation idleOperation = this.imapSession.idleOperation(obj.getString("folder"), obj.getString("lastKnownUID"));
+    public void listenChanges(final ReadableMap obj, final Callback errorCallback, final Callback successCallback) {
+        IMAPIdleOperation idleOperation = this.imapSession.idleOperation(obj.getString("folder"), Long.valueOf(obj.getInt("lastKnownUID")));
+        
         idleOperation.start(new OperationCallback() {
             @Override
             public void succeeded() {
                 WritableMap result = Arguments.createMap();
                 result.putString("status", "SUCCESS");
-                promise.resolve(result);
+                successCallback.invoke(result);
             }
             @Override
             public void failed(MailException e) {
-                promise.reject(String.valueOf(e.errorCode()), e.getMessage());
+                errorCallback.invoke(e.getMessage());
             }
         });
-    }
-
-    
+    }    
 }

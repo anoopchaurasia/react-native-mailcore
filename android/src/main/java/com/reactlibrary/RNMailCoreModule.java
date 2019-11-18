@@ -7,6 +7,7 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.CallBack;
 import com.facebook.react.bridge.WritableMap;
 import com.libmailcore.Address;
 import com.libmailcore.AuthType;
@@ -179,11 +180,11 @@ public class RNMailCoreModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public void listenChanges(final ReadableMap obj, final Promise promise) {
+  public void listenChanges(final ReadableMap obj, final Callback errorCallback, final Callback successCallback) {
     getCurrentActivity().runOnUiThread(new Runnable() {
       @Override
       public void run() {
-        mailClient.listenChanges(obj, promise);
+        mailClient.listenChanges(obj, errorCallback, successCallback);
       }
     });
   }
