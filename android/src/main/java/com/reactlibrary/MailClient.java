@@ -576,5 +576,21 @@ public class MailClient {
         });
     }
 
+    public void listenChanges(final ReadableMap obj,final Promise promise) {
+        IMAPIdleOperation idleOperation = this.imapSession.idleOperation(obj.getString("folder"), obj.getString("lastKnownUID"));
+        idleOperation.start(new OperationCallback() {
+            @Override
+            public void succeeded() {
+                WritableMap result = Arguments.createMap();
+                result.putString("status", "SUCCESS");
+                promise.resolve(result);
+            }
+            @Override
+            public void failed(MailException e) {
+                promise.reject(String.valueOf(e.errorCode()), e.getMessage());
+            }
+        });
+    }
+
     
 }
