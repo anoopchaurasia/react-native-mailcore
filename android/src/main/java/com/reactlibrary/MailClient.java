@@ -544,6 +544,65 @@ public class MailClient {
         });
     }
 
+    public void getMailsByNumber(final ReadableMap obj, final Promise promise) {
+        final String folder = obj.getString("folder");
+        int requestKind = obj.getInt("requestKind");
+        Long limit = Long.valueOf(100);
+        if(obj.hasKey("limit")) {
+            limit = Long.valueOf(obj.getInt("limit"));
+        }
+        IndexSet indexSet = IndexSet.indexSetWithRange(new Range(1, limit));
+        final IMAPFetchMessagesOperation messagesOperation = imapSession.fetchMessagesByNumberOperation(folder, requestKind, indexSet);
+
+        if (obj.hasKey("headers")) {
+            ReadableArray headersArray = obj.getArray("headers");
+            List<String> extraHeaders = new ArrayList<>();
+            for (int i = 0; headersArray.size() > i; i++) {
+                extraHeaders.add(headersArray.getString(i));
+            }
+            messagesOperation.setExtraHeaders(extraHeaders);
+        }
+
+        final WritableMap result = Arguments.createMap();
+        final WritableArray mails = Arguments.createArray();
+        messagesOperation.start(new OperationCallback() {
+            @Override
+            public void succeeded() {
+                List<IMAPMessage> messages = messagesOperation.messages();
+                if (messages.isEmpty()) {
+                    promise.reject("Mails not found!");
+                    return;
+                }
+                for (final IMAPMessage message: messages) {
+                    final WritableMap mailData = Arguments.createMap();
+                    WritableMap headerData = Arguments.createMap();
+                    ListIterator<String> headerIterator = message.header().allExtraHeadersNames().listIterator();
+                    while(headerIterator.hasNext()){
+                        String headerKey = headerIterator.next();
+                        headerData.putString(headerKey, message.header().extraHeaderValueForName(headerKey));
+                    }
+                    mailData.putMap("headers", headerData);
+                    Long mailId = message.uid();
+                    mailData.putInt("id", mailId.intValue());
+                    mailData.putInt("flags", message.flags());
+                    mailData.putString("from", message.header().from().displayName());
+                    mailData.putString("subject", message.header().subject());
+                    mailData.putString("date", message.header().date().toString());
+                    mailData.putInt("attachments", message.attachments().size());
+                    
+                    mails.pushMap(mailData);              
+                }
+                result.putString("status", "SUCCESS");
+                result.putArray("mails", mails);
+                promise.resolve(result);
+            }
+            @Override
+            public void failed(MailException e) {
+                promise.reject(String.valueOf(e.errorCode()), e.getMessage());
+            }
+        });
+    }
+
 
     public void getAttachment(final ReadableMap obj, final Promise promise) {
         final String filename = obj.getString("filename");

@@ -180,6 +180,16 @@ public class RNMailCoreModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
+  public void getMailsByNumber(final ReadableMap obj, final Promise promise) {
+    getCurrentActivity().runOnUiThread(new Runnable() {
+      @Override
+      public void run() {
+        mailClient.getMailsByNumber(obj, promise);
+      }
+    });
+  }
+
+  @ReactMethod
   public void listenChanges(final ReadableMap obj, final Callback errorCallback, final Callback successCallback) {
     getCurrentActivity().runOnUiThread(new Runnable() {
       @Override
